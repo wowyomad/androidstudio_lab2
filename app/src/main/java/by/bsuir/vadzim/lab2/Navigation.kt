@@ -1,4 +1,4 @@
-package by.bsuir.vadzim.lab2;
+package by.bsuir.vadzim.lab2
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -11,17 +11,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable;
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -35,7 +43,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
-@Preview
+@Preview (showBackground = true)
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
@@ -55,13 +63,13 @@ fun Navigation() {
             enterTransition = {
                 slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                    animationSpec = tween(700)
+                    animationSpec = tween(250)
                 )
             },
             exitTransition = {
                 slideOutOfContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                    animationSpec = tween(700)
+                    animationSpec = tween(250)
                 )
             }
 
@@ -77,8 +85,12 @@ fun Navigation() {
 fun MainScreen(
     navController: NavController
 ) {
-    var text by remember {
+    val maxChar = 30
+    var text by rememberSaveable {
         mutableStateOf("")
+    }
+    var displayError by rememberSaveable {
+        mutableStateOf(false)
     }
     Column(
         verticalArrangement = Arrangement.Center,
@@ -86,21 +98,50 @@ fun MainScreen(
             .fillMaxSize()
             .padding(horizontal = 50.dp)
     ) {
+
+
         TextField(
             value = text,
             onValueChange = {
-                text = it
+                if(it.length <= maxChar) text = it
+                displayError = false
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            supportingText = {
+                Text(
+                    text = "${text.length} / $maxChar",
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (displayError) {
+                    Text(
+                        "error",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color.Red
+                    )
+                }
+            },
+            trailingIcon = {
+                if (displayError)
+                    Icon(Icons.Filled.Error,"error", tint = MaterialTheme.colorScheme.error)
+            },
+
+
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
-                navController.navigate(Screen.DetailsScreen.withArgs(text))
+                if(text.isNotBlank()) {
+                    navController.navigate(Screen.DetailsScreen.withArgs(text))
+                } else {
+                    displayError = true
+                }
             },
             modifier = Modifier.align(Alignment.End)
         ) {
-            Text("To Detail Screen")
+            Text("Next")
         }
     }
 }
